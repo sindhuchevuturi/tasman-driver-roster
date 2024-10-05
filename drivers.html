@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drivers List</title>
+    <script src="js/app.js" defer></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        input, select {
+            width: 100%;
+            padding: 5px;
+            box-sizing: border-box;
+        }
+        .add-btn {
+            margin-top: 10px;
+            padding: 10px 15px;
+            background-color: rgb(6, 6, 201); /* Navy blue background */
+            color: white;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+        }
+        .add-btn:hover {
+            background-color: #27963f; /* Darker navy blue on hover */
+        }
+    </style>
+</head>
+<body>
+<a href="index.html">Back to Roster</a>
+<h2>Drivers List</h2>
+
+<table id="driversTable">
+    <thead>
+        <tr>
+            <th>Driver Name</th>
+            <th>On Leave</th>
+            <th>Has MSIC</th>
+            <th>Has White Card</th>
+            <th>Phone Number</th> 
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>(HC) Dean Piggot</td>
+            <td><input type="checkbox" class="onLeave" onchange="refreshDriverDropdowns()"></td>
+            <td><input type="checkbox" class="hasMSIC" checked onchange="refreshDriverDropdowns()"></td>
+            <td><input type="checkbox" class="hasWhiteCard" checked onchange="refreshDriverDropdowns()"></td>
+            <td><input type="text" value="+61488092513" class="driverPhone"></td> <!-- Moved to the end -->
+       
+        </tr>
+        <tr>
+            <td>(MC) Jagdip Singh</td>
+            <td><input type="checkbox" class="onLeave" onchange="refreshDriverDropdowns()"></td>
+            <td><input type="checkbox" class="hasMSIC" checked onchange="refreshDriverDropdowns()"></td>
+            <td><input type="checkbox" class="hasWhiteCard" checked onchange="refreshDriverDropdowns()"></td>
+            <td><input type="text" value="+61488092513" class="driverPhone"></td> <!-- Moved to the end -->
+       
+        </tr>
+        <!-- Add more drivers -->
+    </tbody>
+</table>
+
+<!-- Add New Driver -->
+<h3>Add New Driver</h3>
+<input type="text" id="newDriverName" placeholder="Add New Driver Name">
+<input type="text" id="newDriverPhone" placeholder="Add Phone Number (+61488092513)">
+<button class="add-btn" onclick="addDriver()">Add Driver</button>
+
+<script src="js/app.js"></script>
+</body>
+</html>
