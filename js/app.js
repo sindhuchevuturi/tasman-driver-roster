@@ -33,23 +33,29 @@ let nextRowId = 1;
         }
     });
 }
+
 // Function to set default date inputs to current date
 function setDefaultJobDates() {
     const dateInputs = document.querySelectorAll('#jobsTable .jobDate');
-    console.log('Found date inputs:', dateInputs.length);
-    const today = new Date().toISOString().split('T')[0]; // Current date in 'YYYY-MM-DD' format
-    dateInputs.forEach(input => {
-        console.log('Setting date input:', input);
-        input.value = today;
+    jobDateInputs.forEach(input => {
+        input.value = melbourneDate; // Set date value to Melbourne date
+        input.dispatchEvent(new Event('change')); // Trigger a change event for any listeners
     });
 }
 
+function updateRosterTableDates(melbourneDate) {
+    const rosterDateInputs = document.querySelectorAll('#rosterTableBody input[type="date"]');
+    rosterDateInputs.forEach(input => {
+        input.value = melbourneDate; // Set date value to Melbourne date
+        input.dispatchEvent(new Event('change'));
+    });
+}
 function getMelbourneDate() {
     const now = new Date();  // Get the current date and time
     const currentDateElement = document.getElementById("currentDate");
     
     try {
-        // Attempt to get the time in Melbourne
+        // Use the Intl.DateTimeFormat to get the current date in Melbourne
         const melbourneTime = new Intl.DateTimeFormat('en-AU', {
             timeZone: 'Australia/Melbourne',
             weekday: 'long', 
@@ -63,26 +69,28 @@ function getMelbourneDate() {
         console.log("Melbourne time:", melbourneTime);  // Log the Melbourne time
         
         if (currentDateElement) {
-            currentDateElement.innerText = melbourneTime;  // Display the Melbourne time
+            currentDateElement.innerText = melbourneTime;  // Display the Melbourne time in the header
         } else {
             console.error("Element with ID 'currentDate' not found");
         }
+
+        // Get Melbourne's current date in 'YYYY-MM-DD' format
+        const melbourneDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Australia/Melbourne' });
+        
+        // Update the job list and roster table dates
+        updateJobListDates(melbourneDate); 
+        updateRosterTableDates(melbourneDate); 
+
     } catch (error) {
-        console.error("Error in Melbourne time:", error);
-        // Fallback to local time
-        const localTime = now.toLocaleString('en-AU', {
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric',
-            hour: 'numeric',
-            minute: 'numeric'
-        });
-        if (currentDateElement) {
-            currentDateElement.innerText = localTime;
-        }
+        console.error("Error getting Melbourne time:", error);
     }
 }
+
+
+
+
+
+
 
 function resetMemory() {
     // Clear roster data from localStorage
@@ -148,7 +156,7 @@ function reassignRowIds() {
 
 function addRow(selectedDate = '') {
     if (!selectedDate) {
-        selectedDate = new Date().toISOString().split('T')[0]; // Set to current date if not provided
+        selectedDate = getCurrentMelbourneDate();// Set to current date if not provided
     }
 
     
@@ -159,7 +167,6 @@ function addRow(selectedDate = '') {
     const row = document.createElement('tr');
     row.setAttribute('data-row-id', rowId); // Store the rowId as a data attribute
 
-    const service = "Sunrice"; // Replace with actual value
 
     
 
@@ -554,15 +561,19 @@ function confirmRow(rowId) {
            // updateLocalStorage();
     }
 }
+// Function to get the current date in Melbourne time in 'YYYY-MM-DD' format
+function getCurrentMelbourneDate() {
+    return new Date().toLocaleDateString('en-CA', { timeZone: 'Australia/Melbourne' });
+}
 
   // Function to add a new job dynamically
   function addJob() {
     const newJob = document.getElementById('newJob').value.trim();
     const newJobCount = parseInt(document.getElementById('newJobCount').value.trim());
-    const newJobDate = document.getElementById('newJobDate').value; // New date input
+    let newJobDate = document.getElementById('newJobDate').value; 
 
     if (!newJobDate) {
-        newJobDate = new Date().toISOString().split('T')[0];
+        newJobDate = getCurrentMelbourneDate();
     }
 
     // Validate job name, job count, and date
@@ -780,16 +791,18 @@ function loadConfirmedJobs() {
     });
 }
 
-function handleBackToRoster() {
+function handleBackToRoster(event) {
+    event.preventDefault(); // Prevent immediate redirection
+
     // Save the roster state before navigating
     const isSaved = saveRosterState();
 
     // If saving was successful, proceed with navigation
     if (isSaved) {
         setTimeout(() => {
-            loadConfirmedJobs();
-            window.location.href = "index.html";
-        }, 100); // Short delay of 100ms
+            refreshVehicleDropdowns(); // Refresh vehicle dropdowns
+            window.location.href = "index.html"; // Navigate back to roster page after a short delay
+        }, 100); // Short delay of 100ms to allow data saving
     } else {
         // If saving failed, show an alert and prevent navigation
         alert("Failed to save roster data. Please try again.");
@@ -1163,6 +1176,25 @@ function deleteVehicle(index) {
 // Start observing the roster table for changes
 observer.observe(rosterTableBody, { childList: true });
 // Initial setup: load trailers and setup roster
+
+
+function getCurrentMelbourneDate() {
+    return new Date().toLocaleDateString('en-CA', { timeZone: 'Australia/Melbourne' });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const melbourneDate = getCurrentMelbourneDate();
+    const jobDateInputs = document.querySelectorAll('#jobsTable .jobDate');
+    jobDateInputs.forEach(input => {
+        input.value = melbourneDate;
+    });
+});
+
+
+
+
+
+
 window.onload = function() {
     console.log("Window loaded. Initializing trailers and loading trailers into the table.");
     loadRosterState(); 
@@ -1171,11 +1203,10 @@ window.onload = function() {
     refreshVehicleDropdowns();
     initializeTrailers(); // Pre-populate trailers if localStorage is empty
     loadTrailers(); // Load trailers into the table
-    getMelbourneDate(); // Set the current date
+    getMelbourneDate(); // Set the header date to Melbourne time
     addRow();
     setDefaultJobDates();
-    document.getElementById('newJobDate').value = new Date().toISOString().split('T')[0];
-
+   
     setTimeout(function() {
         // Select all rows in the table body
         const rows = document.querySelectorAll('#rosterTableBody tr');
