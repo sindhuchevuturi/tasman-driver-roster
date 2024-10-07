@@ -249,73 +249,95 @@ function updateDriverList(rowId) {
 }
 function confirmJob(button) {
     const row = button.closest('tr');
-    const selectedDate = row.cells[0].querySelector('.jobDate').value; // Get the selected date
+    const jobCountInput = row.querySelector('.rowCount');
+    const selectedDate = row.querySelector('.jobDate').value;
     const clientName = row.cells[1].textContent;
-    const selectedTrailerType = row.cells[2].querySelector('select').value;
-    const numberOfRows = parseInt(row.cells[3].querySelector('.rowCount').value); // Number of jobs entered
+    const selectedTrailerType = row.querySelector('select').value;
+    const numberOfRows = parseInt(jobCountInput.value);
 
-    // Validate the selected date
-    if (!selectedDate) {
-        alert("Please select a date for the job.");
-        return;
+    if (button.textContent === "Add Job") {
+        if (isNaN(numberOfRows) || numberOfRows <= 0) {
+            alert("Please enter a valid number of jobs.");
+            return;
+        }
+
+        if (!selectedDate) {
+            alert("Please select a date for the job.");
+            return;
+        }
+
+        let savedJobs = JSON.parse(localStorage.getItem('confirmedJobs')) || [];
+
+        for (let i = 0; i < numberOfRows; i++) {
+            const newRow = addRow(selectedDate);
+            const rowId = newRow.getAttribute('data-row-id');
+
+            const clientCell = document.getElementById(`service${rowId}`);
+            const trailerTypeSelect = document.getElementById(`type${rowId}`);
+            const dateCell = document.getElementById(`date${rowId}`);
+
+            clientCell.innerHTML = `<option>${clientName}</option>`;
+            trailerTypeSelect.innerHTML = `<option value="${selectedTrailerType}">${selectedTrailerType}</option>`;
+            dateCell.value = selectedDate;
+
+            const jobData = {
+                client: clientName,
+                trailerType: selectedTrailerType,
+                date: selectedDate,
+                rowId: rowId
+            };
+            savedJobs.push(jobData);
+        }
+
+        localStorage.setItem('confirmedJobs', JSON.stringify(savedJobs));
+
+        button.textContent = "Edit";
+        button.classList.add('edit-btn');
+        button.classList.remove('confirm-btn');
+        jobCountInput.disabled = true;
+        row.querySelector('select').disabled = true;
+        row.querySelector('.jobDate').disabled = true;
+        saveRosterState();
+    } else if (button.textContent === "Edit") {
+        button.textContent = "Save";
+        jobCountInput.disabled = false;
+        row.querySelector('select').disabled = false;
+        row.querySelector('.jobDate').disabled = false;
+    } else if (button.textContent === "Save") {
+        const newJobCount = parseInt(jobCountInput.value);
+        if (isNaN(newJobCount) || newJobCount <= 0) {
+            alert("Please enter a valid number of jobs.");
+            return;
+        }
+
+        const existingRows = Array.from(document.querySelectorAll('#rosterTableBody tr'));
+        const existingClientRows = existingRows.filter(r => 
+            r.querySelector(`#service${r.getAttribute('data-row-id')}`).value === clientName
+        );
+
+        const rowsToAdd = newJobCount - existingClientRows.length;
+        if (rowsToAdd > 0) {
+            for (let i = 0; i < rowsToAdd; i++) {
+                const newRow = addRow(selectedDate);
+                const rowId = newRow.getAttribute('data-row-id');
+
+                const clientCell = document.getElementById(`service${rowId}`);
+                const trailerTypeSelect = document.getElementById(`type${rowId}`);
+                clientCell.innerHTML = `<option>${clientName}</option>`;
+                trailerTypeSelect.innerHTML = `<option value="${selectedTrailerType}">${selectedTrailerType}</option>`;
+            }
+        }
+
+        button.textContent = "Edit";
+        button.classList.add('edit-btn');
+        button.classList.remove('confirm-btn');
+        jobCountInput.disabled = true;
+        row.querySelector('select').disabled = true;
+        row.querySelector('.jobDate').disabled = true;
     }
 
-    // Validate the number of rows
-    if (isNaN(numberOfRows) || numberOfRows <= 0) {
-        alert("Please enter a valid number of rows.");
-        return;
-    }
-
-    // Retrieve saved jobs from localStorage or create an empty array if none exists
-    let savedJobs = JSON.parse(localStorage.getItem('confirmedJobs')) || [];
-
-    // Loop to create the number of rows entered in the # of jobs input
-    for (let i = 0; i < numberOfRows; i++) {
-        const newRow = addRow(selectedDate); // Create a new row for each job
-        const rowId = newRow.getAttribute('data-row-id'); // Get the unique row ID
-
-        // Update the Client Name (Service) and Trailer Type in the new row
-        const clientCell = document.getElementById(`service${rowId}`);
-        const trailerTypeSelect = document.getElementById(`type${rowId}`);
-        const dateCell = document.getElementById(`date${rowId}`); // Date cell in the Roster Table
-
-        // Set client and trailer type
-        clientCell.innerHTML = `<option>${clientName}</option>`;
-        trailerTypeSelect.innerHTML = '';
-        const trailerTypeOption = document.createElement('option');
-        trailerTypeOption.value = selectedTrailerType;
-        trailerTypeOption.textContent = selectedTrailerType;
-        trailerTypeSelect.appendChild(trailerTypeOption);
-
-        // Set the date in the new row
-        dateCell.value = selectedDate;
-
-        // Save each job's data into an object and store it in the savedJobs array
-        const jobData = {
-            client: clientName,
-            trailerType: selectedTrailerType,
-            date: selectedDate,
-            rowId: rowId
-        };
-        savedJobs.push(jobData); // Add the job data to the saved jobs array
-    }
-
-    // Save the updated jobs list back to localStorage
-    localStorage.setItem('confirmedJobs', JSON.stringify(savedJobs));
-
-    // Disable the confirm button and inputs in the jobs list row
-    button.disabled = true;
-    row.cells[0].querySelector('.jobDate').disabled = true; // Disable the date input
-    row.cells[2].querySelector('select').disabled = true;
-    row.cells[3].querySelector('.rowCount').disabled = true;
-
-    // Change the button style to indicate it's disabled
-    button.style.backgroundColor = 'grey';
-    button.style.cursor = 'not-allowed';
-
-    alert('Job confirmed and saved!'); // Optional feedback to user
+    saveRosterState();
 }
-
 
 
 
