@@ -740,58 +740,38 @@ function collectRosterData() {
         XLSX.writeFile(workbook, fileName);
     }
 
-    // Utility function to convert table to a 2D array for Excel export
-    // Utility function to convert table to a 2D array for Excel export
-    function tableToArray(table) {
+   function tableToArray(table) {
         const data = [];
+        const colors = {
+            'Sunrice': 'FFFF00', // Yellow
+            'Agripak': 'ADD8E6', // Light Blue
+            'CHS BB': 'FFC0CB', // Light Pink
+            'NE Link': 'FFA500' // Orange
+        };
+    
         table.querySelectorAll('tr').forEach((row, index) => {
-            // Skip row 2 (which is index 1 since indexing starts at 0)
-            if (index === 1) return;
+            // Skip hidden rows
+            if (row.style.display === 'none')  return;
     
             const rowData = [];
-            row.querySelectorAll('th, td').forEach(cell => {
+            const cells = Array.from(row.querySelectorAll('th, td'));
+    
+            // Omit the last two columns (Confirm and Delete)
+            cells.slice(0, -2).forEach(cell => {
                 const input = cell.querySelector('input, select');
-                if (input) {
-                    if (input.type === 'checkbox') {
-                        rowData.push(input.checked);
-                    } else {
-                        rowData.push(input.value);
-                    }
-                } else {
-                    rowData.push(cell.textContent.trim());
-                }
+                const cellValue = input ? (input.value || cell.textContent) : cell.textContent;
+                const service = cell.textContent.trim();
+    
+                // Apply color based on the service
+                const style = colors[service] ? { fill: { fgColor: { rgb: colors[service] } } } : {};
+    
+                rowData.push({ v: cellValue, s: style });
             });
+    
             data.push(rowData);
         });
         return data;
     }
-    
-
-function tableToArrayWithStyles(table) {
-    const data = [];
-    const colors = {
-        'Sunrice': 'FFFF00', // Yellow
-        'Xagripak': 'ADD8E6', // Light Blue
-        'BB': 'FFC0CB', // Light Pink
-        'Northeast Link': 'FFA500' // Orange
-    };
-
-    table.querySelectorAll('tr').forEach(row => {
-        const rowData = [];
-        row.querySelectorAll('th, td').forEach(cell => {
-            const input = cell.querySelector('input, select');
-            const service = cell.textContent.trim();
-            const cellValue = input ? (input.value || cell.textContent) : cell.textContent;
-
-            // Apply color based on the service
-            const style = (colors[service]) ? { fill: { fgColor: { rgb: colors[service] } } } : {};
-
-            rowData.push({ v: cellValue, s: style });
-        });
-        data.push(rowData);
-    });
-    return data;
-}
 
 function loadConfirmedJobs() {
     const savedJobs = JSON.parse(localStorage.getItem('confirmedJobs')) || [];
