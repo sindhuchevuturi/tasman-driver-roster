@@ -740,7 +740,7 @@ function collectRosterData() {
     
         table.querySelectorAll('tr').forEach((row, index) => {
             // Skip hidden rows
-            if (row.style.display === 'none')  return;
+            if (row.style.display === 'none'|| index=== 0)  return;
     
             const rowData = [];
             const cells = Array.from(row.querySelectorAll('th, td'));
