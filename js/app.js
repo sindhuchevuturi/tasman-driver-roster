@@ -170,9 +170,10 @@ function addRow(selectedDate = '') {
         <td><select id="trailer3${rowId}"></select></td> <!-- Trailer 3 dropdown -->
 
         
-        <td>
-            <select id="type${rowId}"></select> <!-- Trailer Type dropdown -->
+       <td>
+        <select id="type${rowId}" onchange="updateTrailerFields(${rowId})"></select> <!-- Trailer Type dropdown -->
         </td>
+
         <td><input type="time" id="startTime${rowId}"></td>
         <td><input type="time" id="finishTime${rowId}"></td>
         <td><select id="service${rowId}"></select></td>
@@ -206,7 +207,7 @@ function addRow(selectedDate = '') {
     hideRowsWithEmptyService();
     // Populate other dropdowns
     populateDropDowns(rowId);
-    
+    updateTrailerFields(rowId); 
     return row; // Return the created row
 }
 function toggleVehiclesList() {
@@ -267,6 +268,7 @@ function confirmJob(button) {
 
             clientCell.innerHTML = `<option>${clientName}</option>`;
             trailerTypeSelect.innerHTML = `<option value="${selectedTrailerType}">${selectedTrailerType}</option>`;
+            updateTrailerFields(rowId);
             dateCell.value = selectedDate;
 
             const jobData = {
@@ -777,6 +779,7 @@ function loadConfirmedJobs() {
 
             clientCell.innerHTML = `<option>${job.client}</option>`;
             trailerTypeSelect.innerHTML = `<option>${job.trailerType}</option>`;
+            updateTrailerFields(rowId);
             dateCell.value = job.date;
         }
     });
@@ -858,6 +861,7 @@ function loadRosterState() {
         document.getElementById(`trailer2${rowId}`).value = rowData.trailer2;
         document.getElementById(`trailer3${rowId}`).value = rowData.trailer3;
         document.getElementById(`type${rowId}`).value = rowData.trailerType;
+        updateTrailerFields(rowId);
         document.getElementById(`startTime${rowId}`).value = rowData.startTime;
         document.getElementById(`finishTime${rowId}`).value = rowData.finishTime;
         document.getElementById(`service${rowId}`).value = rowData.service;
@@ -969,6 +973,12 @@ function populateTrailerRegoDropdown(rowId) {
         const currentValue = select.value;
         select.innerHTML = '';
 
+        // Add default option '-'
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '-';
+        defaultOption.textContent = '-';
+        select.appendChild(defaultOption);
+
         trailers.forEach(function (trailerRego) {
             const option = document.createElement('option');
             option.value = trailerRego;
@@ -976,8 +986,10 @@ function populateTrailerRegoDropdown(rowId) {
             select.appendChild(option);
         });
 
-        if (currentValue) {
+        if (currentValue && currentValue !== '-') {
             select.value = currentValue;
+        } else {
+            select.value = '-'; // Set to default '-'
         }
     });
 
@@ -990,6 +1002,7 @@ function populateTrailerRegoDropdown(rowId) {
         $select.select2();
     });
 }
+
 function hideRowsWithEmptyService() {
     const rows = document.querySelectorAll('#rosterTableBody tr:not(.existing-row)'); // Select only non-existing rows
 
@@ -1092,6 +1105,12 @@ function populateVehicleDropdown(rowId) {
     
     vehicleRegoSelect.innerHTML = ''; // Clear existing options
 
+    // Add default option '-'
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '-';
+    defaultOption.textContent = '-';
+    vehicleRegoSelect.appendChild(defaultOption);
+
     vehicles.forEach(function (vehicleRego) {
         const option = document.createElement('option');
         option.value = vehicleRego;
@@ -1099,8 +1118,8 @@ function populateVehicleDropdown(rowId) {
         vehicleRegoSelect.appendChild(option);
     });
 
-    // Initialize or refresh Select2 for better dropdown UI (optional)
-    $(`#rego${rowId}`).select2(); // Reinitialize Select2 if needed
+    // Initialize or refresh Select2
+    $(`#rego${rowId}`).select2();
 }
 
 function refreshVehicleDropdowns() {
@@ -1134,10 +1153,11 @@ function updateTrailerFields(rowId) {
     const trailer2 = document.getElementById(`trailer2${rowId}`);
     const trailer3 = document.getElementById(`trailer3${rowId}`);
 
-    // Disable all trailer fields initially
-    trailerRego.disabled = true;
-    trailer2.disabled = true;
-    trailer3.disabled = true;
+    // Disable all trailer fields initially and set value to '-'
+    [trailerRego, trailer2, trailer3].forEach(field => {
+        field.disabled = true;
+        field.value = '-';
+    });
 
     // Enable fields based on the trailer type selected
     if (trailerType === 'S' || trailerType === 'SDL') {
@@ -1153,7 +1173,14 @@ function updateTrailerFields(rowId) {
         trailer2.disabled = false;
         trailer3.disabled = false;
     }
+
+    // Refresh Select2 for all trailer fields
+    [`#trailerRego${rowId}`, `#trailer2${rowId}`, `#trailer3${rowId}`].forEach(selectId => {
+        const $select = $(selectId);
+        $select.trigger('change.select2'); // Refresh Select2 display
+    });
 }
+
 
 function deleteVehicle(index) {
     let vehicles = JSON.parse(localStorage.getItem('vehicles')) || [];
