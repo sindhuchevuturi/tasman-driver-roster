@@ -86,20 +86,9 @@ function getMelbourneDate() {
     }
 }
 
-
-
-
-
-
-
 function resetMemory() {
-    // Clear roster data from localStorage
-    localStorage.removeItem('rosterData');
-    
-    // Clear other related localStorage keys if necessary
-    localStorage.removeItem('confirmedJobs');
-    //localStorage.removeItem('vehicles'); 
-    // Add any other relevant keys here
+    // Clear all data from localStorage
+    localStorage.clear();
 
     // Clear the table body content
     const tableBody = document.getElementById('rosterTableBody');
@@ -108,7 +97,7 @@ function resetMemory() {
     // Optionally reset the rowId counter
     //nextRowId = 1;
 
-    alert('Memory reset successfully. The roster table is now empty.');
+    alert('All memory has been reset successfully. The roster table is now empty.');
 }
 
    
